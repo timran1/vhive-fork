@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.pyc
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,3 +21,7 @@
 
 # Binaries
 vhive
+runc
+
+urls.txt
+*.zip
