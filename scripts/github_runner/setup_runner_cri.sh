@@ -22,45 +22,45 @@
 
 #!/bin/bash
 
-# download and install docker
-sudo apt-get update
-
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    jq \
-    software-properties-common >> /dev/null
-
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-
-sudo apt-get update
-sudo apt-get install --yes docker-ce docker-ce-cli containerd.io >> /dev/null
-
 PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-$PWD/../install_go.sh
+$PWD/setup_cri_dev_env.sh
 
-# install kind from ease-lab/kind
-rm -rf /tmp/kind/
-git clone -b custom_docker_params_for_vHive https://github.com/ease-lab/kind /tmp/kind/
-cd /tmp/kind
-go build
-sudo mv kind /usr/local/bin/
+if [ -f "/usr/local/go/bin/go" ]; then
+    sudo rm -rf /usr/local/go
+fi
 
-sudo usermod -aG docker $USER
-newgrp docker
+# setup github runner
+cd $HOME
+if [ ! -d "$HOME/actions-runner" ]; then
+    mkdir actions-runner && cd actions-runner
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest | grep 'browser_' | cut -d\" -f4 | grep linux-x64)
+    curl -o actions-runner-linux-x64.tar.gz -L -C - $LATEST_VERSION
+    tar xzf "./actions-runner-linux-x64.tar.gz"
+    rm actions-runner-linux-x64.tar.gz
+    chmod +x ./config.sh
+    chmod +x ./run.sh
+    systemctl enable run-at-startup.service
+    sudo tee /etc/systemd/system/connect_github_runner.service <<END
+[Unit]
+Description=Connect to Github as self hosted runner
+Wants=network-online.target
+After=network.target network-online.target
 
-#setup crontab for nightly reboots
-TMPFILE=$(mktemp)
-#write out current crontab
-sudo crontab -l > $TMPFILE
-#echo new cron into cron file
-sudo echo "00 02 * * * shutdown -r 0" >> $TMPFILE
-#install new cron file
-sudo crontab $TMPFILE
+[Service]
+Type=simple
+RemainAfterExit=yes
+Environment="RUNNER_ALLOW_RUNASROOT=1"
+ExecStart=/root/actions-runner/run.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
+END
+else
+    systemctl daemon-reload
+    systemctl enable connect_github_runner --now
+
+fi
+
+# we want the command (expected to be systemd) to be PID1, so exec to it
+exec "$@"

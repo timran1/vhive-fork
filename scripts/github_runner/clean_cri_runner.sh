@@ -1,8 +1,6 @@
-#!/bin/bash
-
 # MIT License
 #
-# Copyright (c) 2020 Dmitrii Ustiugov, Plamen Petrov and EASE lab
+# Copyright (c) 2020 Shyam Jesalpura and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
-SCRIPTS=$ROOT/scripts
+#!/bin/bash
 
-source $SCRIPTS/install_go.sh
-$SCRIPTS/setup_system.sh
-$SCRIPTS/setup_firecracker_containerd.sh
+PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-$SCRIPTS/install_stock.sh
-$SCRIPTS/create_devmapper.sh
+KUBECONFIG=/etc/kubernetes/admin.conf kn service delete --all
+sudo kubeadm reset --cri-socket /etc/firecracker-containerd/fccd-cri.sock -f
+sudo pkill -INT vhive
+sudo pkill -9 firecracker-containerd
+sudo pkill -9 firecracker
+sudo pkill -9 containerd
+$PWD/../create_devmapper.sh
+sudo rm /etc/firecracker-containerd/fccd-cri.sock
+rm ${HOME}/.kube/config
+sudo rm -rf ${HOME}/tmp
 
+ifconfig -a | grep _tap | cut -f1 -d":" | while read line ; do sudo ip link delete "$line" ; done
+ifconfig -a | grep tap_ | cut -f1 -d":" | while read line ; do sudo ip link delete "$line" ; done
+bridge -j vlan |jq -r '.[].ifname'| while read line ; do sudo ip link delete "$line" ; done

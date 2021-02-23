@@ -1,4 +1,5 @@
-
+linter
+md
 ACM
 Adileh
 al
@@ -20,6 +21,7 @@ ARXIV
 ASBD
 Asheim
 ASPLOS
+autoscaling
 baseurl
 benchmarking
 Benchmarking
@@ -33,6 +35,8 @@ CCKVS
 CCNoC
 CCNOC
 ccNUMA
+cd
+Changelog
 Chunduri
 cloudlab
 CloudLab
@@ -51,6 +55,7 @@ Containerd
 Costa
 CPUs
 CRC
+cri
 CRI
 csv
 Daglis
@@ -62,6 +67,7 @@ DCNs
 De
 debian
 deployer
+dev
 devmapper
 dir
 Distributable
@@ -75,6 +81,7 @@ Dragojevic
 Drumond
 DVFS
 Edouard
+env
 EPFL
 et
 EuroSys
@@ -116,6 +123,7 @@ IIT
 InfiniBand
 init
 inproceedings
+integ
 invoker
 io
 Ipsum
@@ -202,6 +210,7 @@ OpenCV
 orchestrator
 Ozer
 PageMaker
+params
 Passwordless
 pdf
 Pejman
@@ -218,21 +227,26 @@ postfix
 PPoPP
 PPOPP
 Prabhu
+pragmas
 Pramod
+preconfigured
 Prefetch
 Prefetched
 Prefetching
 priyank
 Priyank
+ps
 PTEMagnet
 QoS
 QOS
+quickstart
 RackOut
 RACKOUT
 Rakesh
 Ranganathan
 RDMA
 rdquo
+repo
 roadmap
 rperf
 RPERF
@@ -260,6 +274,7 @@ SIGARCH
 SIGPLAN
 sms
 SMT
+snapshotting
 SoC
 SOCACHE
 SOCC
@@ -292,6 +307,7 @@ ustiugov
 Ustiugov
 vhive
 vHive
+vhiveease
 Vijay
 virtualized
 Vlachos
@@ -309,6 +325,3 @@ xyz
 yml
 YY
 Zhu
-autoscaling
-snapshotting
-quickstart

@@ -20,48 +20,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM myoung34/github-runner:ubuntu-bionic
+FROM kindest/node:v1.20.2
 
 RUN apt-get update && \
     apt-get install --yes \
-    git \
+    apt-utils && \
+    apt-get install --yes \
     sudo \
-    apt-utils \
-    wget \
-    curl \
-    make \
-    gcc \
-    iproute2 \
-    iptables \
+    wget curl\
+    gcc g++\
+    iproute2 iptables net-tools \
     apt-transport-https \
     ca-certificates \
-    curl \
-    gcc \
-    g++ \
-    make \
+    make jq \
     acl \
-    net-tools \
-    git-lfs \
+    git git-lfs \
     bc \
     dmsetup \
     gnupg-agent \
-    software-properties-common && \
-    sudo sysctl -w net.ipv4.conf.all.forwarding=1 && \
-    sudo sysctl net.ipv4.ip_forward=1 && \
-    sudo sysctl --system && \
-    sudo mkdir -p /etc/firecracker-containerd && \
-    sudo mkdir -p /var/lib/firecracker-containerd/runtime && \
-    sudo mkdir -p /etc/containerd/ && \
-    sudo curl -fsSL -o /var/lib/firecracker-containerd/runtime/hello-vmlinux.bin https://s3.amazonaws.com/spec.ccfc.min/img/hello/kernel/hello-vmlinux.bin
+    apt-transport-https software-properties-common pkg-config \
+    libseccomp-dev libseccomp2 \
+    unzip tar \
+    socat \
+    util-linux \
+    ipvsadm \
+    tmux vim && \
+    sudo wget -O /usr/local/bin/kn -c "https://github.com/knative/client/releases/download/v0.20.0/kn-linux-amd64" && \
+    sudo chmod +x /usr/local/bin/kn && \
+    mkdir /scripts
+COPY scripts/github_runner/setup_cri_dev_env.sh /scripts/
+COPY scripts/setup_system.sh /scripts/
+COPY scripts/create_devmapper.sh /scripts/
+RUN chmod +x /scripts/setup_system.sh && \
+    chmod +x /scripts/create_devmapper.sh && \
+    chmod +x /scripts/setup_cri_dev_env.sh
 
-COPY scripts/github_runner/setup_runner.sh /setup_runner.sh
-COPY scripts/create_devmapper.sh /create_devmapper.sh
-COPY bin/firecracker /usr/local/bin/
-COPY bin/jailer /usr/local/bin/
-COPY bin/containerd-shim-aws-firecracker /usr/local/bin/
-COPY bin/firecracker-containerd /usr/local/bin/
-COPY bin/firecracker-ctr /usr/local/bin/
-COPY bin/default-rootfs.img /var/lib/firecracker-containerd/runtime/
-COPY configs/firecracker-containerd/config.toml /etc/firecracker-containerd/
-COPY configs/firecracker-containerd/firecracker-runtime.json /etc/containerd/
-ENTRYPOINT /setup_runner.sh ; /entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint","/scripts/setup_cri_dev_env.sh","/sbin/init"]

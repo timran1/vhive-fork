@@ -2,6 +2,30 @@
 
 *Note: this page is going to be extended.*
 
+## Deploying single node container environment
+
+You can use the image to build/test/develop vHive inside a container. This image is preconfigured to run a single node Kubernetes cluster inside a container and contains packages to setup vHive on top of it. 
+```bash
+git clone -b custom_docker_params_for_vHive https://github.com/ease-lab/kind
+# build kind
+cd kind && go build
+# pull latest image
+docker pull vhiveease/vhive_dev_env
+# Start a container 
+kind create cluster --image vhiveease/vhive_dev_env
+# Enter the container
+docker exec -it <container name> bash
+```
+### Clean up
+```bash
+# list all kind clusters
+kind get clusters 
+# delete a cluster 
+kind delete cluster --name <name>
+```
+
+Once the container is up and running, follow [this](./quickstart_guide.md#setup-a-single-node-cluster-master-and-worker-functionality-on-the-same-node) guide to setup a single node vHive cluster.
+
 
 ## High-level features
 

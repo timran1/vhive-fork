@@ -1,8 +1,6 @@
-#!/bin/bash
-
 # MIT License
 #
-# Copyright (c) 2020 Dmitrii Ustiugov, Plamen Petrov and EASE lab
+# Copyright (c) 2020 Dmitrii Ustiugov, Shyam Jesalpura and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +20,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
-SCRIPTS=$ROOT/scripts
+#!/bin/bash
 
-source $SCRIPTS/install_go.sh
-$SCRIPTS/setup_system.sh
-$SCRIPTS/setup_firecracker_containerd.sh
+PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+$PWD/setup_system.sh
+$PWD/create_devmapper.sh
 
-$SCRIPTS/install_stock.sh
-$SCRIPTS/create_devmapper.sh
+# install Protocol Buffer Compiler
+PROTO_VERSION=3.11.4
+if [ ! -f "protoc-$PROTO_VERSION-linux-x86_64.zip" ]; then
+    wget -c "https://github.com/google/protobuf/releases/download/v$PROTO_VERSION/protoc-$PROTO_VERSION-linux-x86_64.zip"
+    sudo unzip -u "protoc-$PROTO_VERSION-linux-x86_64.zip" -d /usr/local
+    rm "protoc-$PROTO_VERSION-linux-x86_64.zip"
+fi
 
+# Necessary for containerd as container runtime but not docker
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# Set up required sysctl params, these persist across reboots.
+sudo tee /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+sudo sysctl --system
+sudo swapoff -a
+
+# we want the command (expected to be systemd) to be PID1, so exec to it
+exec "$@"
