@@ -13,6 +13,6 @@ sudo PATH=${PATH} /usr/local/bin/firecracker-containerd --config /etc/firecracke
 sleep 15
 
 cd ${SCRIPT_DIR}/../
-source /etc/profile && go build && sudo ./vhive
+source /etc/profile && go clean && go build && sudo ./vhive --dbg |& tee ~/disagg-mem-sys/vhive.log
 
 set +x

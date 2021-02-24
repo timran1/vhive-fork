@@ -63,6 +63,8 @@ const (
 	testImageName = "vhiveease/helloworld:var_workload"
 )
 
+var envList = []string{"PORT=50051"}
+
 // StartVM Boots a VM if it does not exist
 func (o *Orchestrator) StartVM(ctx context.Context, vmID, imageName string) (_ *StartVMResponse, _ *metrics.Metric, retErr error) {
 	var (
@@ -120,6 +122,7 @@ func (o *Orchestrator) StartVM(ctx context.Context, vmID, imageName string) (_ *
 		containerd.WithNewSnapshot(vmID, *vm.Image),
 		containerd.WithNewSpec(
 			oci.WithImageConfig(*vm.Image),
+			oci.WithEnv(envList),
 			firecrackeroci.WithVMID(vmID),
 			firecrackeroci.WithVMNetwork,
 		),
