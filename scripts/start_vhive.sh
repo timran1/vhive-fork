@@ -11,7 +11,7 @@ cd ${SCRIPT_DIR}/../
 
 sudo containerd &> ./containerd.log &
 sleep 10
-sudo PATH=${PATH} /usr/local/bin/firecracker-containerd --config /etc/firecracker-containerd/config.toml &
+sudo PATH=${PATH} /usr/local/bin/firecracker-containerd --config /etc/firecracker-containerd/config.toml &> ./fc-containerd.log &
 sleep 15
 
 source /etc/profile && go clean && go build && sudo ./vhive &> ./vhive.log
