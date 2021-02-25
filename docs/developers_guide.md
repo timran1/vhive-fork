@@ -33,6 +33,7 @@ Once the container is up and running, follow [this](./quickstart_guide.md#setup-
 Record-and-Prefetch (REAP) snapshots.
 
 * vHive integrates with Kubernetes and Knative via its built-in CRI support.
+Currently, only Knative Serving is supported.
 
 * vHive supports arbitrary distributed setup of a serverless cluster.
 
@@ -40,6 +41,38 @@ Record-and-Prefetch (REAP) snapshots.
 
 * vHive has robust Continuous-Integration and our team is committed to deliver
 high-quality code.
+
+
+### MinIO S3 service
+
+#### Deploying a MinIO service
+
+```bash
+# create a folder in the local storage (on <MINIO_NODE_NAME> that is one of the Kubernetes nodes)
+sudo mkdir -p <MINIO_PATH>
+
+cd ./configs/storage/minio
+
+# create a persistent volume (PV) and the corresponding PV claim
+# specify the node name that would host the MinIO objects
+# (use `hostname` command for the local node)
+MINIO_NODE_NAME=<MINIO_NODE_NAME> MINIO_PATH=<MINIO_PATH> envsubst < pv.yaml | kubectl apply -f -
+kubectl apply -f pv-claim.yaml
+# create a storage app and the corresponding service
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+```
+
+#### Deleting the MinIO service that was created with the instructions above
+
+```bash
+kubectl delete deployment minio-deployment
+kubectl delete pvc minio-pv-claim
+kubectl delete svc minio-service
+kubectl delete pv minio-pv
+```
+
+Note that files in the bucket persist in the local filesystem after a persistent volume removal.
 
 
 ## Performance analysis

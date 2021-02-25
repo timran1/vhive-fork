@@ -23,8 +23,12 @@
 package taps
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
+	"os/exec"
+	"strings"
 	"sync/atomic"
 
 	log "github.com/sirupsen/logrus"
@@ -100,8 +104,62 @@ func createBridge(bridgeName, gatewayAddr string) {
 	}
 }
 
+//ConfigIPtables Configures IP tables for internet access inside VM
+func ConfigIPtables(tapName, hostIface string) error {
+
+	if hostIface == "" {
+		out, err := exec.Command(
+			"route",
+		).Output()
+		if err != nil {
+			log.Warnf("Failed to fetch host net interfaces %v\n%s\n", err, out)
+			return err
+		}
+		scanner := bufio.NewScanner(bytes.NewReader(out))
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.Contains(line, "default") {
+				hostIface = line[strings.LastIndex(line, " ")+1:]
+			}
+		}
+	}
+	cmd := exec.Command(
+		"sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", hostIface, "-j", "MASQUERADE",
+	)
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Warnf("Failed to configure NAT %v\n%s\n", err, stdoutStderr)
+		return err
+	}
+	cmd = exec.Command(
+		"sudo", "iptables", "-A", "FORWARD", "-i", tapName, "-o", hostIface, "-j", "ACCEPT",
+	)
+	stdoutStderr, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Warnf("Failed to setup forwarding into tap %v\n%s\n", err, stdoutStderr)
+		return err
+	}
+	cmd = exec.Command(
+		"sudo", "iptables", "-A", "FORWARD", "-o", tapName, "-i", hostIface, "-j", "ACCEPT",
+	)
+	stdoutStderr, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Warnf("Failed to setup forwarding out from tap %v\n%s\n", err, stdoutStderr)
+		return err
+	}
+	cmd = exec.Command(
+		"sudo", "iptables", "-A", "FORWARD", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT",
+	)
+	stdoutStderr, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Warnf("Failed to configure conntrack %v\n%s\n", err, stdoutStderr)
+		return err
+	}
+	return nil
+}
+
 // AddTap Creates a new tap and returns the corresponding network interface
-func (tm *TapManager) AddTap(tapName string) (*NetworkInterface, error) {
+func (tm *TapManager) AddTap(tapName, hostIface string) (*NetworkInterface, error) {
 	tm.Lock()
 
 	if ni, ok := tm.createdTaps[tapName]; ok {
@@ -120,6 +178,10 @@ func (tm *TapManager) AddTap(tapName string) (*NetworkInterface, error) {
 				tm.Lock()
 				tm.createdTaps[tapName] = ni
 				tm.Unlock()
+				err := ConfigIPtables(tapName, hostIface)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			return ni, err
