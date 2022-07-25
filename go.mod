@@ -58,7 +58,7 @@ require (
 	github.com/ease-lab/vhive/proto v0.0.0-00010101000000-000000000000
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.8.0
+	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	google.golang.org/grpc v1.33.1
